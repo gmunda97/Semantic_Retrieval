@@ -1,0 +1,11 @@
+/.DS_Store
+/.ipynb_checkpoints
+/DeepLearning_dataset.csv
+/FAISS.ipynb
+/IR_project.ipynb
+/New_DeepLearning_dataset.csv
+/SQL
+/embeddings.ipynb
+/ir-venv
+/milvus_example.py
+/preprocessing&inv_index.ipynb
