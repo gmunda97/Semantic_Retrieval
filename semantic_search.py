@@ -38,7 +38,7 @@ if __name__ == '__main__':
         embeddings = pickle.load(f)
 
     search = SemanticSearch(embeddings=embeddings)
-    df = pd.read_csv("New_DeepLearning_dataset.csv")
+    df = pd.read_csv("datasets/New_DeepLearning_dataset.csv")
 
     query = 'fine-tuning BERT'
     embedding_vector = search.create_query(query)
