@@ -19,9 +19,10 @@ class SentenceEmbeddings():
             pickle.dump(embeddings, f)
 
 
-model = SentenceEmbeddings('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
-df = pd.read_csv("New_DeepLearning_dataset.csv")
-documents = df["text"][:100]
-embeddings = model.generate_embeddings(documents)
+if __name__ == '__main__':
+    model = SentenceEmbeddings('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
+    df = pd.read_csv("New_DeepLearning_dataset.csv")
+    documents = df["text"][:100]
+    embeddings = model.generate_embeddings(documents)
 
-model.save_embeddings(embeddings)
+    model.save_embeddings(embeddings)

@@ -32,17 +32,16 @@ class SemanticSearch():
         return results
     
 
-# load the saved embeddings from file
-with open('embeddings.pkl', 'rb') as f:
-    embeddings = pickle.load(f)
+if __name__ == '__main__':
+    # load the saved embeddings from file
+    with open('embeddings.pkl', 'rb') as f:
+        embeddings = pickle.load(f)
 
-# create an instance of the SemanticSearch class using the saved embeddings
-search = SemanticSearch(embeddings=embeddings)
-df = pd.read_csv("New_DeepLearning_dataset.csv")
+    search = SemanticSearch(embeddings=embeddings)
+    df = pd.read_csv("New_DeepLearning_dataset.csv")
 
-# create a query and retrieve the most similar documents
-query = 'fine-tuning BERT'
-embedding_vector = search.create_query(query)
-results = search.retrieve_query(embedding_vector)
-for doc in results:
-    print(doc)
+    query = 'fine-tuning BERT'
+    embedding_vector = search.create_query(query)
+    results = search.retrieve_query(embedding_vector)
+    for doc in results:
+        print(doc)
