@@ -25,10 +25,10 @@ class SemanticSearch():
         xq = self.model.encode([query])
         return xq
 
-    def retrieve_query(self, embedding_vector, number_of_k=4):
+    def retrieve_query(self, embedding_vector, text_data, number_of_k=4):
         k = number_of_k
         D, I = self.index.search(embedding_vector, k)
-        results = [f"{i}: {df['text'][i]}" for i in I[0]]
+        results = [f"{i}: {text_data[i]}" for i in I[0]]
         return results
     
 
@@ -42,6 +42,6 @@ if __name__ == '__main__':
 
     query = 'fine-tuning BERT'
     embedding_vector = search.create_query(query)
-    results = search.retrieve_query(embedding_vector)
+    results = search.retrieve_query(embedding_vector, text_data=df["text"][:100])
     for doc in results:
         print(doc)
