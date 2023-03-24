@@ -7,16 +7,28 @@ from sentence_transformers import SentenceTransformer
 
 class SemanticSearch():
     DEFAULT_MODEL_NAME = 'sentence-transformers/multi-qa-MiniLM-L6-cos-v1'
+    INDEX_TYPES = {
+        "flatL2": faiss.IndexFlatL2,
+        "flatIP": faiss.IndexFlatIP,
+    }
 
-    def __init__(self, embeddings, model_name=None):
+    def __init__(self, embeddings, model_name=None, index_type=None):
         model_name = model_name or self.DEFAULT_MODEL_NAME
         self.model = SentenceTransformer(model_name)
-        self.index = self.load_index(embeddings)
+        self.index = self.load_index(embeddings, index_type)
 
-    def load_index(self, embeddings):
+    def load_index(self, embeddings, index_type):
         docs = embeddings
         d = embeddings.shape[1]
-        index = faiss.IndexFlatL2(d)
+
+        if index_type == "flatL2":
+            index = faiss.IndexFlatL2(d)
+        elif index_type == "flatIP":
+            index = faiss.IndexFlatIP(d) 
+            faiss.normalize_L2(docs)
+        else:
+            raise ValueError(f"Invalid index type: {index_type}")
+        
         index.add(docs.astype("float32"))
         index.ntotal
         return index
@@ -37,7 +49,7 @@ if __name__ == '__main__':
     with open('embeddings.pkl', 'rb') as f:
         embeddings = pickle.load(f)
 
-    search = SemanticSearch(embeddings=embeddings)
+    search = SemanticSearch(embeddings=embeddings, index_type="flatIP")
     df = pd.read_csv("datasets/New_DeepLearning_dataset.csv")
 
     query = 'fine-tuning BERT'
