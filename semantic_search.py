@@ -40,8 +40,11 @@ class SemanticSearch():
     def retrieve_query(self, embedding_vector, text_data, number_of_k=4):
         k = number_of_k
         D, I = self.index.search(embedding_vector, k)
-        results = [f"{i}: {text_data[i]}" for i in I[0]]
-        return results
+        # sorting the documents based on similarity
+        results = [(i, text_data[i], d) for d, i in zip(D[0], I[0])]
+        results = sorted(results, key=lambda x: x[2], reverse=True)
+        top_k_results = results[:k]
+        return top_k_results
     
 
 if __name__ == '__main__':
@@ -55,5 +58,5 @@ if __name__ == '__main__':
     query = 'fine-tuning BERT'
     embedding_vector = search.create_query(query)
     results = search.retrieve_query(embedding_vector, text_data=df["text"][:100])
-    for doc in results:
-        print(doc)
+    for i, doc, score in results:
+        print(f"Document {i} (score: {score:.4f}): {doc}")
