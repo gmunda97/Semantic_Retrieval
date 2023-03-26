@@ -49,7 +49,7 @@ class SemanticSearch():
 
 if __name__ == '__main__':
     # load the saved embeddings from file
-    with open('embeddings.pkl', 'rb') as f:
+    with open('embeddings3.pkl', 'rb') as f:
         embeddings = pickle.load(f)
 
     search = SemanticSearch(embeddings=embeddings, index_type="flatIP")
@@ -57,6 +57,6 @@ if __name__ == '__main__':
 
     query = 'fine-tuning BERT'
     embedding_vector = search.create_query(query)
-    results = search.retrieve_query(embedding_vector, text_data=df["text"][:100])
+    results = search.retrieve_query(embedding_vector, text_data=df["text"])
     for i, doc, score in results:
         print(f"Document {i} (score: {score:.4f}): {doc}")
