@@ -1,4 +1,6 @@
 import pickle
+import argparse
+import os
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer
@@ -20,9 +22,18 @@ class SentenceEmbeddings():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Sentence embeddings with SentenceTransformers.')
+    parser.add_argument('dataset_path', type=str, help='Path to the dataset file')
+    args = parser.parse_args()
+
+    dataset_path = args.dataset_path
+    if not os.path.exists(dataset_path):
+        print(f"Dataset file does not exist: {dataset_path}")
+        exit()
+    
     model = SentenceEmbeddings('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
-    df = pd.read_csv("datasets/New_DeepLearning_dataset.csv")
-    documents = df["text"] 
+    df = pd.read_csv(dataset_path)
+    documents = df["text"]
     embeddings = model.generate_embeddings(documents)
 
     model.save_embeddings(embeddings)

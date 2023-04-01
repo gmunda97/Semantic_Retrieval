@@ -1,5 +1,7 @@
 import pickle
 import faiss
+import argparse
+import os
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer
@@ -44,19 +46,29 @@ class SemanticSearch():
         results = [(i, text_data[i], d) for d, i in zip(D[0], I[0])]
         results = sorted(results, key=lambda x: x[2], reverse=True)
         top_k_results = results[:k]
-        return top_k_results
+        return top_k_results 
     
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Semantic search with SentenceTransformers and Faiss.')
+    parser.add_argument('dataset_path', type=str, help='Path to the dataset file')
+    parser.add_argument('--index_type', type=str, default='flatIP', help='Type of Faiss index')
+    args = parser.parse_args()
+
+    dataset_path = args.dataset_path
+    if not os.path.exists(dataset_path):
+        print(f"Dataset file does not exist: {dataset_path}")
+        exit()
+
     # load the saved embeddings from file
     with open('embeddings3.pkl', 'rb') as f:
         embeddings = pickle.load(f)
 
-    search = SemanticSearch(embeddings=embeddings, index_type="flatIP")
-    df = pd.read_csv("datasets/New_DeepLearning_dataset.csv")
+    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type)
+    df = pd.read_csv(dataset_path)
 
     query = 'fine-tuning BERT'
     embedding_vector = search.create_query(query)
     results = search.retrieve_query(embedding_vector, text_data=df["text"])
     for i, doc, score in results:
-        print(f"Document {i} (score: {score:.4f}): {doc}")
+        print(f"Document {i} (score: {score:.4f}): {doc} \n")
