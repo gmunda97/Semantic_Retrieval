@@ -52,6 +52,7 @@ class SemanticSearch():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Semantic search with SentenceTransformers and Faiss.')
     parser.add_argument('dataset_path', type=str, help='Path to the dataset file')
+    parser.add_argument('embeddings_path', type=str, help='Path to the embeddings file')
     parser.add_argument('--index_type', type=str, default='flatIP', help='Type of Faiss index')
     args = parser.parse_args()
 
@@ -59,9 +60,14 @@ if __name__ == '__main__':
     if not os.path.exists(dataset_path):
         print(f"Dataset file does not exist: {dataset_path}")
         exit()
+    
+    embeddings_path = args.embeddings_path
+    if not os.path.exists(embeddings_path):
+        print(f"Embeddings file does not exist: {embeddings_path}")
+        exit()
 
     # load the saved embeddings from file
-    with open('embeddings3.pkl', 'rb') as f:
+    with open(embeddings_path, 'rb') as f:
         embeddings = pickle.load(f)
 
     search = SemanticSearch(embeddings=embeddings, index_type=args.index_type)
