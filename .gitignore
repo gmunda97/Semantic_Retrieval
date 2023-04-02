@@ -9,3 +9,7 @@
 /ir-venv
 /milvus_example.py
 /preprocessing&inv_index.ipynb
+/embeddings.pkl
+/embeddings2.pkl
+/embeddings3.pkl
+/jupyter_notebooks

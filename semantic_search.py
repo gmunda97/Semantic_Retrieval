@@ -1,58 +1,80 @@
-import torch
-import nltk
+import pickle
 import faiss
+import argparse
+import os
 import numpy as np
 import pandas as pd
-from nltk.tokenize import word_tokenize
-from nltk import sent_tokenize
-from transformers import BertTokenizer, BertModel
 from sentence_transformers import SentenceTransformer
 
 
-class SentenceEmbeddings():
-    def __init__(self, model_name):
-        self.model = SentenceTransformer(model_name)
-
-    def generate_embeddings(self, documents):
-        documents = documents.to_list()
-        embeddings = self.model.encode(documents)
-        return embeddings
-    
-class SemanticSearch(SentenceEmbeddings):
+class SemanticSearch():
     DEFAULT_MODEL_NAME = 'sentence-transformers/multi-qa-MiniLM-L6-cos-v1'
+    INDEX_TYPES = {
+        "flatL2": faiss.IndexFlatL2,
+        "flatIP": faiss.IndexFlatIP,
+    }
 
-    def __init__(self, documents, model_name=None):
+    def __init__(self, embeddings, model_name=None, index_type=None):
         model_name = model_name or self.DEFAULT_MODEL_NAME
-        super().__init__(model_name)
-        self.documents = documents
-        self.index = self.add_to_index(self.generate_embeddings(documents))
+        self.model = SentenceTransformer(model_name)
+        self.index = self.load_index(embeddings, index_type)
 
-    def add_to_index(self, embeddings):
+    def load_index(self, embeddings, index_type):
         docs = embeddings
         d = embeddings.shape[1]
-        index = faiss.IndexFlatL2(d)
+
+        if index_type == "flatL2":
+            index = faiss.IndexFlatL2(d)
+        elif index_type == "flatIP":
+            index = faiss.IndexFlatIP(d) 
+            faiss.normalize_L2(docs)
+        else:
+            raise ValueError(f"Invalid index type: {index_type}")
+        
         index.add(docs.astype("float32"))
         index.ntotal
         return index
-    
+
     def create_query(self, query):
         xq = self.model.encode([query])
         return xq
-    
-    def retrieve_query(self, embedding_vector, number_of_k=4):
+
+    def retrieve_query(self, embedding_vector, text_data, number_of_k=4):
         k = number_of_k
         D, I = self.index.search(embedding_vector, k)
-        results = [f"{i}: {df['text'][i]}" for i in I[0]]
-        return results
-        
+        # sorting the documents based on similarity
+        results = [(i, text_data[i], d) for d, i in zip(D[0], I[0])]
+        results = sorted(results, key=lambda x: x[2], reverse=True)
+        top_k_results = results[:k]
+        return top_k_results 
     
+
 if __name__ == '__main__':
-    #embedder = SentenceEmbeddings()
-    df = pd.read_csv("New_DeepLearning_dataset.csv")
-    documents = df["text"][:100]
-    search = SemanticSearch(documents)
-    query = "fine-tuning BERT"
-    query_embedding = search.create_query(query)
-    results = search.retrieve_query(query_embedding)
-    print(results)
-    #embeddings = embedder.generate_embeddings(documents)
+    parser = argparse.ArgumentParser(description='Semantic search with SentenceTransformers and Faiss.')
+    parser.add_argument('dataset_path', type=str, help='Path to the dataset file')
+    parser.add_argument('embeddings_path', type=str, help='Path to the embeddings file')
+    parser.add_argument('--index_type', type=str, default='flatIP', help='Type of Faiss index')
+    args = parser.parse_args()
+
+    dataset_path = args.dataset_path
+    if not os.path.exists(dataset_path):
+        print(f"Dataset file does not exist: {dataset_path}")
+        exit()
+    
+    embeddings_path = args.embeddings_path
+    if not os.path.exists(embeddings_path):
+        print(f"Embeddings file does not exist: {embeddings_path}")
+        exit()
+
+    # load the saved embeddings from file
+    with open(embeddings_path, 'rb') as f:
+        embeddings = pickle.load(f)
+
+    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type)
+    df = pd.read_csv(dataset_path)
+
+    query = 'fine-tuning BERT'
+    embedding_vector = search.create_query(query)
+    results = search.retrieve_query(embedding_vector, text_data=df["text"])
+    for i, doc, score in results:
+        print(f"Document {i} (score: {score:.4f}): {doc} \n")
