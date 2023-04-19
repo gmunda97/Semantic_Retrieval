@@ -63,8 +63,8 @@ if __name__ == '__main__':
     parser.add_argument('dataset_path', type=str, help='Path to the dataset file')
     parser.add_argument('embeddings_path', type=str, help='Path to the embeddings file')
     parser.add_argument('--index_type', type=str, default='flatIP', help='Type of Faiss index')
-    parser.add_argument('--index_file', type=str, default=None, help='Path to the index file')
-    args, _ = parser.parse_known_args()
+    parser.add_argument('index_path', type=str, default=None, help='Path to the index file')
+    args = parser.parse_args()
 
     dataset_path = args.dataset_path
     if not os.path.exists(dataset_path):
@@ -76,11 +76,16 @@ if __name__ == '__main__':
         print(f"Embeddings file does not exist: {embeddings_path}")
         exit()
 
+    index_path = args.index_path
+    if not os.path.exists(index_path):
+        print(f"Index file does not exist: {index_path}")
+        exit()
+
     # load the saved embeddings from file
     with open(embeddings_path, 'rb') as f:
         embeddings = pickle.load(f)
 
-    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type, index_file=args.index_file)
+    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type, index_file=args.index_path)
     #search.load_index_from_file(args.index_file)
     #search.save_index_to_file("my_index.index")
     df = pd.read_csv(dataset_path)
