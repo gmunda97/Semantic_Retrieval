@@ -2,7 +2,6 @@ import pickle
 import faiss
 import argparse
 import os
-import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 
@@ -14,10 +13,13 @@ class SemanticSearch():
         "flatIP": faiss.IndexFlatIP,
     }
 
-    def __init__(self, embeddings, model_name=None, index_type=None):
+    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None):
         model_name = model_name or self.DEFAULT_MODEL_NAME
         self.model = SentenceTransformer(model_name)
-        self.index = self.load_index(embeddings, index_type)
+        if index_file is not None:
+            self.index = self.load_index_from_file(index_file)
+        else:
+            self.index = self.load_index(embeddings, index_type)
 
     def load_index(self, embeddings, index_type):
         docs = embeddings
@@ -34,6 +36,10 @@ class SemanticSearch():
         index.add(docs.astype("float32"))
         index.ntotal
         return index
+    
+    def load_index_from_file(self, index_file):
+        index = faiss.read_index(index_file)
+        return index
 
     def create_query(self, query):
         xq = self.model.encode([query])
@@ -48,13 +54,17 @@ class SemanticSearch():
         top_k_results = results[:k]
         return top_k_results 
     
+    def save_index_to_file(self, index_file):
+        faiss.write_index(self.index, index_file)
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Semantic search with SentenceTransformers and Faiss.')
     parser.add_argument('dataset_path', type=str, help='Path to the dataset file')
     parser.add_argument('embeddings_path', type=str, help='Path to the embeddings file')
     parser.add_argument('--index_type', type=str, default='flatIP', help='Type of Faiss index')
-    args = parser.parse_args()
+    parser.add_argument('--index_file', type=str, default=None, help='Path to the index file')
+    args, _ = parser.parse_known_args()
 
     dataset_path = args.dataset_path
     if not os.path.exists(dataset_path):
@@ -70,7 +80,9 @@ if __name__ == '__main__':
     with open(embeddings_path, 'rb') as f:
         embeddings = pickle.load(f)
 
-    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type)
+    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type, index_file=args.index_file)
+    #search.load_index_from_file(args.index_file)
+    #search.save_index_to_file("my_index.index")
     df = pd.read_csv(dataset_path)
 
     query = 'fine-tuning BERT'
