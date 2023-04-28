@@ -45,11 +45,11 @@ class SemanticSearch():
         xq = self.model.encode([query])
         return xq
 
-    def retrieve_query(self, embedding_vector, text_data, number_of_k=4):
+    def retrieve_query(self, embedding_vector, text_data, link_data, number_of_k=10):
         k = number_of_k
         D, I = self.index.search(embedding_vector, k)
-        # sorting the documents based on similarity
-        results = [(i, text_data[i], d) for d, i in zip(D[0], I[0])]
+        # sorting the documents based on similarity and adding the links
+        results = [(i, text_data[i], D[0][j], link_data[i]) for j, i in enumerate(I[0])]
         results = sorted(results, key=lambda x: x[2], reverse=True)
         top_k_results = results[:k]
         return top_k_results 
@@ -81,17 +81,21 @@ if __name__ == '__main__':
         print(f"Index file does not exist: {index_path}")
         exit()
 
-    # load the saved embeddings from file
+    #load the saved embeddings from file
     with open(embeddings_path, 'rb') as f:
         embeddings = pickle.load(f)
 
     search = SemanticSearch(embeddings=embeddings, index_type=args.index_type, index_file=args.index_path)
     #search.load_index_from_file(args.index_file)
-    #search.save_index_to_file("my_index.index")
+    #search.save_index_to_file("index_papers.index")
     df = pd.read_csv(dataset_path)
 
-    query = 'fine-tuning BERT'
-    embedding_vector = search.create_query(query)
-    results = search.retrieve_query(embedding_vector, text_data=df["text"])
-    for i, doc, score in results:
-        print(f"Document {i} (score: {score:.4f}): {doc} \n")
+    while True:
+        query = input('Input your query here (press "q" to quit): ')
+        if query == "q":
+            break
+        embedding_vector = search.create_query(query)
+        results = search.retrieve_query(embedding_vector, text_data=df["title"], link_data=df["link"])
+        for i, doc, score, link in results:
+            print(f"Document {i} (score: {score:.4f}): {doc}")
+            print(f"Link: {link} \n")

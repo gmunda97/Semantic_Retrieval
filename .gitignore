@@ -2,7 +2,8 @@
 /.ipynb_checkpoints
 /jupyter_notebooks
 /datasets
+/embeddings
+/index
 /SQL
 /ir-venv
 /milvus_example.py
-/embeddings3.pkl
