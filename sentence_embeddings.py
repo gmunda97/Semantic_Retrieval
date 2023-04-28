@@ -1,7 +1,6 @@
 import pickle
 import argparse
 import os
-import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 
@@ -16,7 +15,7 @@ class SentenceEmbeddings():
         self.save_embeddings(embeddings)
         return embeddings
 
-    def save_embeddings(self, embeddings, filename='embeddings3.pkl'):
+    def save_embeddings(self, embeddings, filename="embeddings_papers.pkl"):
         with open(filename, 'wb') as f:
             pickle.dump(embeddings, f)
 
@@ -33,7 +32,7 @@ if __name__ == '__main__':
     
     model = SentenceEmbeddings('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
     df = pd.read_csv(dataset_path)
-    documents = df["text"]
+    documents = df["title"]
     embeddings = model.generate_embeddings(documents)
 
     model.save_embeddings(embeddings)
