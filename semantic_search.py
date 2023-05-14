@@ -20,10 +20,10 @@ class SemanticSearch():
         if index_file is not None:
             self.index = self.load_index_from_file(index_file)
         else:
-            self.index = self.load_index(embeddings, index_type)
+            self.index = self.create_index(embeddings, index_type)
         self.cross_encoder = cross_encoder
 
-    def load_index(self, embeddings, index_type):
+    def create_index(self, embeddings, index_type):
         docs = embeddings
         d = embeddings.shape[1]
 
@@ -47,7 +47,7 @@ class SemanticSearch():
         xq = self.model.encode([query])
         return xq
 
-    def retrieve_query(self, query, text_data, link_data, number_of_k=10):
+    def retrieve_documents(self, query, text_data, link_data, number_of_k=10):
         k = number_of_k
         embedding_vector = self.create_query(query)
         D, I = self.index.search(embedding_vector, k)
@@ -108,8 +108,8 @@ if __name__ == '__main__':
         query = input('Input your query here (press "q" to quit): ')
         if query == "q":
             break
-        # embedding_vector = search.create_query(query)
-        results = search.retrieve_query(query, text_data=df["title"], link_data=df["link"])
+        
+        results = search.retrieve_documents(query, text_data=df["title"], link_data=df["link"])
         for i, doc, score, link in results:
             print(f"Document {i} (score: {score:.4f}): {doc}")
             print(f"Link: {link} \n")
