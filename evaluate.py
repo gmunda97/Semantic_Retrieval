@@ -2,6 +2,7 @@ import pickle
 import pandas as pd
 from sklearn.metrics import ndcg_score
 from semantic_search import SemanticSearch
+from sentence_transformers import CrossEncoder
 
 
 if __name__ == "__main__":
@@ -12,7 +13,8 @@ if __name__ == "__main__":
 
     index = "index/index_papers.index"
 
-    search = SemanticSearch(embeddings=embeddings, index_type="FlatIP", index_file=index)
+    cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+    search = SemanticSearch(embeddings=embeddings, index_type="FlatIP", index_file=index, cross_encoder=cross_encoder)
 
     ground_truth_scores = [3, 2, 4, 1, 3, 2, 3, 4, 2, 1]
 
