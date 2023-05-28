@@ -14,9 +14,12 @@ if __name__ == "__main__":
     index = "index/index_papers.index"
 
     cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-    search = SemanticSearch(embeddings=embeddings, index_type="FlatIP", index_file=index, cross_encoder=cross_encoder)
+    search = SemanticSearch(embeddings=embeddings, 
+                            index_type="FlatIP", 
+                            index_file=index, 
+                            cross_encoder=cross_encoder)
 
-    ground_truth_scores = [3, 2, 4, 1, 3, 2, 3, 4, 2, 1]
+    ground_truth_scores = [4, 4, 1, 4, 2, 3, 3, 2, 1, 1]
 
     query = "neural proabilistic language model"
     results = search.retrieve_documents(query, text_data=df["title"], link_data=df["link"])
