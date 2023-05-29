@@ -37,34 +37,41 @@ class SemanticSearch():
         
         index.add(docs.astype("float32"))
         index.ntotal
+
         return index
     
     def load_index_from_file(self, index_file):
         index = faiss.read_index(index_file)
+
         return index
 
     def create_query(self, query):
         xq = self.model.encode([query])
+
         return xq
 
-    def retrieve_documents(self, query, text_data, link_data, number_of_k=10):
-        k = number_of_k
-        embedding_vector = self.create_query(query)
-        D, I = self.index.search(embedding_vector, k)
+    def retrieve_documents(self, query, text_data, link_data, number_of_k=10, similarity_threshold=0.3):
+        k = min(number_of_k, self.index.ntotal)
+        query_vector = self.create_query(query)
+        D, I = self.index.search(query_vector, k)
         # sorting the documents based on similarity and adding the links
-        results = [(i, text_data[i], D[0][j], link_data[i]) for j, i in enumerate(I[0])]
+        results = [(i, text_data[i], d, link_data[i]) 
+                   for d, i in zip(D[0], I[0]) if d > similarity_threshold]
 
         # re-ranking the top k results using the cross-encoder
         if self.cross_encoder is not None:
             cross_encoder = self.cross_encoder
-            query_doc_pairs = [(query, text_data[i]) for i in I[0]]
+            query_doc_pairs = [(query, text_data[i]) for d, i in zip(D[0], I[0]) 
+                               if d > similarity_threshold]
             scores = cross_encoder.predict(query_doc_pairs)
             softmax_scores = np.exp(scores) / np.sum(np.exp(scores))
-            results = [(i, text, score, link) for (i, text, _, link), score in zip(results, softmax_scores)]
+            results = [(i, text, score, link) for (i, text, _, link), 
+                       score in zip(results, softmax_scores)]
 
         results = sorted(results, key=lambda x: x[2], reverse=True)
         top_k_results = results[:k]
-        return top_k_results 
+        
+        return top_k_results
     
     def save_index_to_file(self, index_file):
         faiss.write_index(self.index, index_file)
