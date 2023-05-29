@@ -19,14 +19,24 @@ if __name__ == "__main__":
                             index_file=index, 
                             cross_encoder=cross_encoder)
 
-    ground_truth_scores = [4, 4, 1, 4, 2, 3, 3, 2, 1, 1]
+    ground_truth_scores = [
+        [4, 4, 1, 4, 2, 3, 3, 2, 1, 1], # query 1
+        [4, 3, 4, 4, 1, 1, 1, 0, 0, 0], # query 2
+        [3, 4, 3, 2, 1, 4, 3, 3, 0, 0], # ...
+        [1, 3, 2, 1, 3, 1, 4, 3, 3, 1],
+        [2, 1, 2, 0, 2, 0, 1, 1, 1, 0]
+    ]
 
-    query = "neural proabilistic language model"
-    results = search.retrieve_documents(query, text_data=df["title"], link_data=df["link"])
-
-    # Extract the relevance scores from the retrieved documents
-    retrieved_scores = [score for _, _, score, _ in results]
-
-    # Calculate NDCG score
-    ndcg = ndcg_score([ground_truth_scores], [retrieved_scores])
-    print(f"NDCG Score: {ndcg:.6f}")
+    queries = [
+        "neural proabilistic language model",
+        "word embeddings for similarity search",
+        "explainability of neural networks",
+        "deep learning for computer vision",
+        "quantum computing for machine learning"
+    ]
+    
+    for query, ground_truths in zip(queries, ground_truth_scores):
+        results = search.retrieve_documents(query, text_data=df["title"], link_data=df["link"])
+        retrieved_scores = [score for _, _, score, _ in results]
+        ndcg = ndcg_score([ground_truths], [retrieved_scores])
+        print(f"NDCG Score for '{query}': {ndcg:.6f}\n")
