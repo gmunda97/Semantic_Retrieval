@@ -23,8 +23,8 @@ if __name__ == "__main__":
         [4, 4, 1, 4, 2, 3, 3, 2, 1, 1], # query 1
         [4, 3, 4, 4, 1, 1, 1, 0, 0, 0], # query 2
         [3, 4, 3, 2, 1, 4, 3, 3, 0, 0], # ...
-        [1, 3, 2, 1, 3, 1, 4, 3, 3, 1],
-        [2, 1, 2, 0, 2, 0, 1, 1, 1, 0]
+        [0, 3, 2, 0, 3, 0, 4, 4, 3, 0],
+        [4, 2, 2, 0, 2, 0, 1, 1, 0, 0]
     ]
 
     queries = [
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         "word embeddings for similarity search",
         "explainability of neural networks",
         "deep learning for computer vision",
-        "quantum computing for machine learning"
+        "quantum machine learning"
     ]
     
     for query, ground_truths in zip(queries, ground_truth_scores):
