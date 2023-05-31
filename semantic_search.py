@@ -3,7 +3,8 @@ import faiss
 import argparse
 import os
 import pandas as pd
-from sentence_transformers import SentenceTransformer
+import numpy as np
+from sentence_transformers import SentenceTransformer, CrossEncoder
 
 
 class SemanticSearch():
@@ -13,15 +14,16 @@ class SemanticSearch():
         "flatIP": faiss.IndexFlatIP,
     }
 
-    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None):
+    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None, cross_encoder=None):
         model_name = model_name or self.DEFAULT_MODEL_NAME
         self.model = SentenceTransformer(model_name)
         if index_file is not None:
             self.index = self.load_index_from_file(index_file)
         else:
-            self.index = self.load_index(embeddings, index_type)
+            self.index = self.create_index(embeddings, index_type)
+        self.cross_encoder = cross_encoder
 
-    def load_index(self, embeddings, index_type):
+    def create_index(self, embeddings, index_type):
         docs = embeddings
         d = embeddings.shape[1]
 
@@ -35,24 +37,41 @@ class SemanticSearch():
         
         index.add(docs.astype("float32"))
         index.ntotal
+
         return index
     
     def load_index_from_file(self, index_file):
         index = faiss.read_index(index_file)
+
         return index
 
     def create_query(self, query):
         xq = self.model.encode([query])
+
         return xq
 
-    def retrieve_query(self, embedding_vector, text_data, link_data, number_of_k=10):
-        k = number_of_k
-        D, I = self.index.search(embedding_vector, k)
+    def retrieve_documents(self, query, text_data, link_data, number_of_k=10, similarity_threshold=0.3):
+        k = min(number_of_k, self.index.ntotal)
+        query_vector = self.create_query(query)
+        D, I = self.index.search(query_vector, k)
         # sorting the documents based on similarity and adding the links
-        results = [(i, text_data[i], D[0][j], link_data[i]) for j, i in enumerate(I[0])]
+        results = [(i, text_data[i], d, link_data[i]) 
+                   for d, i in zip(D[0], I[0]) if d > similarity_threshold]
+
+        # re-ranking the top k results using the cross-encoder
+        if self.cross_encoder is not None:
+            cross_encoder = self.cross_encoder
+            query_doc_pairs = [(query, text_data[i]) for d, i in zip(D[0], I[0]) 
+                               if d > similarity_threshold]
+            scores = cross_encoder.predict(query_doc_pairs)
+            softmax_scores = np.exp(scores) / np.sum(np.exp(scores))
+            results = [(i, text, score, link) for (i, text, _, link), 
+                       score in zip(results, softmax_scores)]
+
         results = sorted(results, key=lambda x: x[2], reverse=True)
         top_k_results = results[:k]
-        return top_k_results 
+        
+        return top_k_results
     
     def save_index_to_file(self, index_file):
         faiss.write_index(self.index, index_file)
@@ -85,7 +104,9 @@ if __name__ == '__main__':
     with open(embeddings_path, 'rb') as f:
         embeddings = pickle.load(f)
 
-    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type, index_file=args.index_path)
+    cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type, index_file=args.index_path, cross_encoder=cross_encoder)
     #search.load_index_from_file(args.index_file)
     #search.save_index_to_file("index_papers.index")
     df = pd.read_csv(dataset_path)
@@ -94,8 +115,8 @@ if __name__ == '__main__':
         query = input('Input your query here (press "q" to quit): ')
         if query == "q":
             break
-        embedding_vector = search.create_query(query)
-        results = search.retrieve_query(embedding_vector, text_data=df["title"], link_data=df["link"])
+        
+        results = search.retrieve_documents(query, text_data=df["title"], link_data=df["link"])
         for i, doc, score, link in results:
             print(f"Document {i} (score: {score:.4f}): {doc}")
             print(f"Link: {link} \n")

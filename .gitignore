@@ -1,9 +1,9 @@
 /.DS_Store
 /.ipynb_checkpoints
-/jupyter_notebooks
 /datasets
+/jupyter_notebooks
 /embeddings
 /index
 /SQL
-/ir-venv
-/milvus_example.py
+/retrieval-venv
+/cross_encoder.py
