@@ -5,15 +5,13 @@ A simple semantic search engine that retrieves similar documents given their cos
 ## Architecture
 ![Architecture](./assets/Architecture.png)
 
-###
-Generating the embeddings:
+### Generating the embeddings:
 
 ```python3 sentence_embeddings.py "/path to your dataset.csv" "/path for the generated embedding file.pkl"```
 
 This script, depending on the dataset size, can take a lot of time to compile, as it need to compute sentence embeddings for all documents in your dataset.
 
-###
-Performing the semantic search:
+### Performing the semantic search:
 
 ```python3 main.py "/path to your dataset.csv" "/path to your generated embeddings.pkl" ""path to your generated index.index"```
 
