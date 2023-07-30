@@ -1,6 +1,6 @@
 # Semantic Search
 
-A simple semantic search engine that retrieves similar documents given their cosine similarity and performs a re-ranking of the retrieved documents with a cross-encoder Transformer for better performance. The code also make use of Facebook AI Similarity Search (FAISS) to store and index the embeddings for a fast retrieval, without indexing them every time you run the code.
+A simple semantic search engine that retrieves similar documents given their cosine similarity and performs a re-ranking of the retrieved documents with a cross-encoder Transformer for better performance. The code also makes use of Facebook AI Similarity Search (FAISS) to store and index the embeddings for a fast retrieval, without indexing them every time you run the code.
 
 ## Architecture
 ![Architecture](./assets/Architecture.png)
@@ -13,7 +13,7 @@ This script, depending on the dataset size, can take a lot of time to compile, a
 
 ### Performing the semantic search:
 
-```python3 main.py "/path to your dataset.csv" "/path to your generated embeddings.pkl" ""path to your generated index.index"```
+```python3 main.py "/path to your dataset.csv" "/path to your generated embeddings.pkl" "path to your generated index.index"```
 
 In you terminal you can then input your query and you will immediately get your top k results.
 
