@@ -17,7 +17,7 @@ class SemanticSearch():
             self.index = self.load_index_from_file(index_file)
         else:
             self.index = self.create_index(embeddings, index_type)
-        self.cross_encoder = CrossEncoder(cross_encoder_name)# if cross_encoder_name else None
+        self.cross_encoder = CrossEncoder(cross_encoder_name) if cross_encoder_name is not None else None
 
     def create_index(self, embeddings, index_type):
         docs = embeddings

@@ -5,6 +5,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from dataclasses import dataclass
 
+
 @dataclass
 class ColumnNames:
     title: str = "title"

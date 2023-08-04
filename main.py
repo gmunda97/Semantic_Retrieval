@@ -53,7 +53,9 @@ if __name__ == '__main__':
         if query == "q":
             break
         
-        results = search.retrieve_documents(query, text_data=df[column_names.title], link_data=df[column_names.link])
+        results = search.retrieve_documents(query, 
+                                            text_data=df[column_names.title], 
+                                            link_data=df[column_names.link])
         for i, doc, score, link in results:
             print(f"Document {i} (score: {score:.4f}): {doc}")
             print(f"Link: {link} \n")
