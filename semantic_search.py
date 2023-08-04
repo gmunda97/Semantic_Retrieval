@@ -1,8 +1,4 @@
-import pickle
 import faiss
-import argparse
-import os
-import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
@@ -14,14 +10,14 @@ class SemanticSearch():
         "flatIP": faiss.IndexFlatIP,
     }
 
-    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None, cross_encoder=None):
+    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None, cross_encoder_name=None):
         model_name = model_name or self.DEFAULT_MODEL_NAME
         self.model = SentenceTransformer(model_name)
         if index_file is not None:
             self.index = self.load_index_from_file(index_file)
         else:
             self.index = self.create_index(embeddings, index_type)
-        self.cross_encoder = cross_encoder
+        self.cross_encoder = CrossEncoder(cross_encoder_name)# if cross_encoder_name else None
 
     def create_index(self, embeddings, index_type):
         docs = embeddings

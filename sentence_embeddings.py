@@ -3,6 +3,12 @@ import argparse
 import os
 import pandas as pd
 from sentence_transformers import SentenceTransformer
+from dataclasses import dataclass
+
+@dataclass
+class ColumnNames:
+    title: str = "title"
+    link: str = "link"
 
 
 class SentenceEmbeddings():
@@ -32,7 +38,8 @@ if __name__ == '__main__':
     
     model = SentenceEmbeddings('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
     df = pd.read_csv(dataset_path)
-    documents = df["title"]
+    column_names = ColumnNames()
+    documents = df[column_names.title]
     embeddings = model.generate_embeddings(documents)
 
     model.save_embeddings(embeddings)

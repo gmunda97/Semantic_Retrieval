@@ -18,4 +18,4 @@ This script, depending on the dataset size, can take a lot of time to compile, a
 In you terminal you can then input your query and you will immediately get your top k results.
 
 **Important!**
-This script can serve as a basis for Retrieval Augmented Generation (RAG) applications. Depending on you needs you can use different databases and/or embeddings.
+This script can serve as a basis for Retrieval Augmented Generation (RAG) applications. Depending on your needs you can use different databases and/or embeddings.
