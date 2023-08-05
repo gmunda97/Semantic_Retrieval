@@ -2,8 +2,8 @@ import argparse
 import os
 import pickle
 import pandas as pd
-from sentence_transformers import CrossEncoder
 from semantic_search import SemanticSearch
+from sentence_embeddings import ColumnNames
 
 '''
 Main file to run the semantic search
@@ -36,9 +36,14 @@ if __name__ == '__main__':
     with open(embeddings_path, 'rb') as f:
         embeddings = pickle.load(f)
 
-    cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+    cross_encoder_name = 'cross-encoder/ms-marco-MiniLM-L-6-v2'
 
-    search = SemanticSearch(embeddings=embeddings, index_type=args.index_type, index_file=args.index_path, cross_encoder=cross_encoder)
+    search = SemanticSearch(embeddings=embeddings, 
+                            index_type=args.index_type, 
+                            index_file=args.index_path, 
+                            cross_encoder_name=cross_encoder_name)
+    
+    column_names = ColumnNames()
     #search.load_index_from_file(args.index_file)
     #search.save_index_to_file("index_papers.index")
     df = pd.read_csv(dataset_path)
@@ -48,7 +53,10 @@ if __name__ == '__main__':
         if query == "q":
             break
         
-        results = search.retrieve_documents(query, text_data=df["title"], link_data=df["link"])
+        results = search.retrieve_documents(query, 
+                                            text_data=df[column_names.title], 
+                                            link_data=df[column_names.link])
+
         for i, doc, score, link in results:
             print(f"Document {i} (score: {score:.4f}): {doc}")
             print(f"Link: {link} \n")

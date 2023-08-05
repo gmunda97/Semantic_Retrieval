@@ -1,8 +1,4 @@
-import pickle
 import faiss
-import argparse
-import os
-import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
@@ -14,14 +10,14 @@ class SemanticSearch():
         "flatIP": faiss.IndexFlatIP,
     }
 
-    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None, cross_encoder=None):
+    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None, cross_encoder_name=None):
         model_name = model_name or self.DEFAULT_MODEL_NAME
         self.model = SentenceTransformer(model_name)
         if index_file is not None:
             self.index = self.load_index_from_file(index_file)
         else:
             self.index = self.create_index(embeddings, index_type)
-        self.cross_encoder = cross_encoder
+        self.cross_encoder = CrossEncoder(cross_encoder_name) if cross_encoder_name is not None else None
 
     def create_index(self, embeddings, index_type):
         docs = embeddings
@@ -57,21 +53,23 @@ class SemanticSearch():
         # sorting the documents based on similarity and adding the links
         results = [(i, text_data[i], d, link_data[i]) 
                    for d, i in zip(D[0], I[0]) if d > similarity_threshold]
-
-        # re-ranking the top k results using the cross-encoder
-        if self.cross_encoder is not None:
-            cross_encoder = self.cross_encoder
-            query_doc_pairs = [(query, text_data[i]) for d, i in zip(D[0], I[0]) 
-                               if d > similarity_threshold]
-            scores = cross_encoder.predict(query_doc_pairs)
-            softmax_scores = np.exp(scores) / np.sum(np.exp(scores))
-            results = [(i, text, score, link) for (i, text, _, link), 
-                       score in zip(results, softmax_scores)]
-
-        results = sorted(results, key=lambda x: x[2], reverse=True)
-        top_k_results = results[:k]
         
-        return top_k_results
+        if self.cross_encoder is not None:
+            results = self.rerank_documents(query, results)
+        
+        return results
+    
+    def rerank_documents(self, query, results):
+        cross_encoder = self.cross_encoder
+        query_doc_pairs = [(query, text) for _, text, _, _ in results] 
+        scores = cross_encoder.predict(query_doc_pairs)
+        softmax_scores = np.exp(scores) / np.sum(np.exp(scores))
+        reranked_results = [(i, text, score, link) for (i, text, _, link), 
+                    score in zip(results, softmax_scores)]
+
+        reranked_results = sorted(reranked_results, key=lambda x: x[2], reverse=True)
+
+        return reranked_results
     
     def save_index_to_file(self, index_file):
         faiss.write_index(self.index, index_file)
