@@ -4,6 +4,10 @@ from sklearn.metrics import ndcg_score
 from semantic_search import SemanticSearch
 from sentence_embeddings import ColumnNames
 
+'''
+A simple script to evaluate the results of the semantic search
+using the NDCG score on 5 queries.
+'''
 
 if __name__ == "__main__":
     df = pd.read_csv("datasets/papers.csv")

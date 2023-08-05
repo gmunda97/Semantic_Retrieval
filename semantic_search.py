@@ -53,21 +53,23 @@ class SemanticSearch():
         # sorting the documents based on similarity and adding the links
         results = [(i, text_data[i], d, link_data[i]) 
                    for d, i in zip(D[0], I[0]) if d > similarity_threshold]
-
-        # re-ranking the top k results using the cross-encoder
-        if self.cross_encoder is not None:
-            cross_encoder = self.cross_encoder
-            query_doc_pairs = [(query, text_data[i]) for d, i in zip(D[0], I[0]) 
-                               if d > similarity_threshold]
-            scores = cross_encoder.predict(query_doc_pairs)
-            softmax_scores = np.exp(scores) / np.sum(np.exp(scores))
-            results = [(i, text, score, link) for (i, text, _, link), 
-                       score in zip(results, softmax_scores)]
-
-        results = sorted(results, key=lambda x: x[2], reverse=True)
-        top_k_results = results[:k]
         
-        return top_k_results
+        if self.cross_encoder is not None:
+            results = self.rerank_documents(query, results)
+        
+        return results
+    
+    def rerank_documents(self, query, results):
+        cross_encoder = self.cross_encoder
+        query_doc_pairs = [(query, text) for _, text, _, _ in results] 
+        scores = cross_encoder.predict(query_doc_pairs)
+        softmax_scores = np.exp(scores) / np.sum(np.exp(scores))
+        reranked_results = [(i, text, score, link) for (i, text, _, link), 
+                    score in zip(results, softmax_scores)]
+
+        reranked_results = sorted(reranked_results, key=lambda x: x[2], reverse=True)
+
+        return reranked_results
     
     def save_index_to_file(self, index_file):
         faiss.write_index(self.index, index_file)
