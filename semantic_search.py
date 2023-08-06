@@ -76,11 +76,11 @@ class SemanticSearch():
         ]
         
         if self.cross_encoder is not None:
-            retrieved_documents = self.rerank_documents(query, retrieved_documents)
+            retrieved_documents = self._rerank_documents(query, retrieved_documents)
         
         return retrieved_documents
     
-    def rerank_documents(self, query: str, retrieved_documents: list) -> list:
+    def _rerank_documents(self, query: str, retrieved_documents: list) -> list:
         cross_encoder = self.cross_encoder
         query_doc_pairs = [(query, text) for _, text, _, _ in retrieved_documents]
 
