@@ -1,6 +1,7 @@
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer, CrossEncoder
+from typing import Union, Optional
 
 
 class SemanticSearch():
@@ -10,7 +11,15 @@ class SemanticSearch():
         "flatIP": faiss.IndexFlatIP,
     }
 
-    def __init__(self, embeddings, model_name=None, index_type=None, index_file=None, cross_encoder_name=None):
+    def __init__(
+            self, 
+            embeddings: Union[list, faiss.Index], 
+            model_name: Optional[str] = None,
+            index_type: Optional[str] = None,
+            index_file: Optional[str] = None, 
+            cross_encoder_name: Optional[str] = None
+    ) -> None:
+        
         model_name = model_name or self.DEFAULT_MODEL_NAME
         self.model = SentenceTransformer(model_name)
         if index_file is not None:
@@ -19,7 +28,7 @@ class SemanticSearch():
             self.index = self.create_index(embeddings, index_type)
         self.cross_encoder = CrossEncoder(cross_encoder_name) if cross_encoder_name is not None else None
 
-    def create_index(self, embeddings, index_type):
+    def create_index(self, embeddings: list, index_type: str) -> faiss.Index:
         docs = embeddings
         d = embeddings.shape[1]
 
@@ -36,41 +45,56 @@ class SemanticSearch():
 
         return index
     
-    def load_index_from_file(self, index_file):
+    def load_index_from_file(self, index_file: str) -> faiss.Index:
         index = faiss.read_index(index_file)
 
         return index
 
-    def create_query(self, query):
-        xq = self.model.encode([query])
+    def create_query(self, query: str) -> np.ndarray:
+        query_embedding = self.model.encode([query])
 
-        return xq
+        return query_embedding
 
-    def retrieve_documents(self, query, text_data, link_data, number_of_k=10, similarity_threshold=0.3):
-        k = min(number_of_k, self.index.ntotal)
-        query_vector = self.create_query(query)
-        D, I = self.index.search(query_vector, k)
+    def retrieve_documents(
+            self, 
+            query: str, 
+            text_data: list, 
+            link_data: list, 
+            number_of_documents: int = 10, 
+            similarity_threshold: float = 0.3
+    ) -> list:
+        
+        max_documents_to_retrieve = min(number_of_documents, self.index.ntotal)
+        query_embedding = self.create_query(query)
+        distances, documents_indices = self.index.search(query_embedding, max_documents_to_retrieve)
+
         # sorting the documents based on similarity and adding the links
-        results = [(i, text_data[i], d, link_data[i]) 
-                   for d, i in zip(D[0], I[0]) if d > similarity_threshold]
+        retrieved_documents = [
+            (index, text_data[index], distance, link_data[index]) 
+            for distance, index in zip(distances[0], documents_indices[0]) 
+            if distance > similarity_threshold
+        ]
         
         if self.cross_encoder is not None:
-            results = self.rerank_documents(query, results)
+            retrieved_documents = self.rerank_documents(query, retrieved_documents)
         
-        return results
+        return retrieved_documents
     
-    def rerank_documents(self, query, results):
+    def rerank_documents(self, query: str, retrieved_documents: list) -> list:
         cross_encoder = self.cross_encoder
-        query_doc_pairs = [(query, text) for _, text, _, _ in results] 
-        scores = cross_encoder.predict(query_doc_pairs)
-        softmax_scores = np.exp(scores) / np.sum(np.exp(scores))
-        reranked_results = [(i, text, score, link) for (i, text, _, link), 
-                    score in zip(results, softmax_scores)]
+        query_doc_pairs = [(query, text) for _, text, _, _ in retrieved_documents]
 
+        similarity_scores = cross_encoder.predict(query_doc_pairs)
+        softmax_scores = np.exp(similarity_scores) / np.sum(np.exp(similarity_scores))
+
+        reranked_results = [
+            (index, text, score, link) 
+            for (index, text, _, link), score in zip(retrieved_documents, softmax_scores)
+        ]
         reranked_results = sorted(reranked_results, key=lambda x: x[2], reverse=True)
 
         return reranked_results
     
-    def save_index_to_file(self, index_file):
+    def save_index_to_file(self, index_file: str) -> None:
         faiss.write_index(self.index, index_file)
     

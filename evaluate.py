@@ -1,6 +1,8 @@
 import pickle
 import pandas as pd
 from sklearn.metrics import ndcg_score
+from typing import List
+
 from semantic_search import SemanticSearch
 from sentence_embeddings import ColumnNames
 
@@ -9,20 +11,47 @@ A simple script to evaluate the results of the semantic search
 using the NDCG score on 5 queries.
 '''
 
+class SemanticSearchEvaluation:
+    def __init__(
+            self, 
+            dataset_path: str, 
+            embeddings_path: str, 
+            index_path: str, 
+            cross_encoder_name: str
+        ):
+
+        self.df = pd.read_csv(dataset_path)
+        self.column_names = ColumnNames()
+
+        with open(embeddings_path, 'rb') as f:
+            self.embeddings = pickle.load(f)
+
+        self.search = self._initialize_search(index_path, cross_encoder_name)
+
+    def _initialize_search(self, index_path: str, cross_encoder_name: str) -> SemanticSearch:
+        search = SemanticSearch(embeddings=self.embeddings, 
+                                index_type="FlatIP", 
+                                index_file=index_path, 
+                                cross_encoder_name=cross_encoder_name)
+        return search
+    
+    def evaluate_queries(self, queries: List[str], ground_truth_scores: List[List[int]]) -> None:
+        for query, ground_truths in zip(queries, ground_truth_scores):
+            results = self.search.retrieve_documents(query, 
+                                                     text_data=self.df[self.column_names.title], 
+                                                     link_data=self.df[self.column_names.link])
+            retrieved_scores = [score for _, _, score, _ in results]
+            ndcg = ndcg_score([ground_truths], [retrieved_scores])
+
+            print(f"NDCG Score for '{query}': {ndcg:.6f}\n")
+
+
 if __name__ == "__main__":
-    df = pd.read_csv("datasets/papers.csv")
-    column_names = ColumnNames()
-
-    with open("embeddings/embeddings_papers.pkl", 'rb') as f:
-        embeddings = pickle.load(f)
-
-    index = "index/index_papers.index"
+    dataset_path = "datasets/papers.csv"
+    embeddings_path = "embeddings/embeddings_papers.pkl"
+    index_path = "index/index_papers.index"
 
     cross_encoder_name = 'cross-encoder/ms-marco-MiniLM-L-6-v2'
-    search = SemanticSearch(embeddings=embeddings, 
-                            index_type="FlatIP", 
-                            index_file=index, 
-                            cross_encoder_name=cross_encoder_name)
 
     ground_truth_scores = [
         [4, 4, 1, 4, 2, 3, 3, 2, 1, 1], # query 1
@@ -39,11 +68,7 @@ if __name__ == "__main__":
         "deep learning for computer vision",
         "quantum machine learning"
     ]
-    
-    for query, ground_truths in zip(queries, ground_truth_scores):
-        results = search.retrieve_documents(query, 
-                                            text_data=df[column_names.title], 
-                                            link_data=df[column_names.link])
-        retrieved_scores = [score for _, _, score, _ in results]
-        ndcg = ndcg_score([ground_truths], [retrieved_scores])
-        print(f"NDCG Score for '{query}': {ndcg:.6f}\n")
+
+    evaluator = SemanticSearchEvaluation(dataset_path, embeddings_path, index_path, cross_encoder_name)
+    evaluator.evaluate_queries(queries, ground_truth_scores)
+    print(evaluator)

@@ -57,6 +57,6 @@ if __name__ == '__main__':
                                             text_data=df[column_names.title], 
                                             link_data=df[column_names.link])
 
-        for i, doc, score, link in results:
-            print(f"Document {i} (score: {score:.4f}): {doc}")
+        for index, document, score, link in results:
+            print(f"Document {index} (score: {score:.4f}): {document}")
             print(f"Link: {link} \n")
