@@ -40,8 +40,7 @@ class TestSemanticSearch:
                 query,
                 sample_texts[:number_of_documents],
                 sample_links[:number_of_documents],
-                number_of_documents=number_of_documents,
-                similarity_threshold=0.3
+                number_of_documents=number_of_documents
             )
 
         assert isinstance(results, list)
