@@ -21,6 +21,29 @@ class TestSemanticSearch:
             cross_encoder_name='cross-encoder/ms-marco-MiniLM-L-6-v2'
         )
 
+    def test_create_index_flatL2(self):
+        sample_embeddings = np.random.rand(100, 384).astype('float32')
+        index_type = 'flatL2'
+        index = self.semantic_search_instance.create_index(sample_embeddings, index_type)
+        assert isinstance(index, faiss.IndexFlatL2)
+
+    def test_create_index_flatIP(self):
+        sample_embeddings = np.random.rand(100, 384).astype('float32')
+        index_type = 'flatIP'
+        index = self.semantic_search_instance.create_index(sample_embeddings, index_type)
+        assert isinstance(index, faiss.IndexFlatIP)
+
+    @patch('faiss.read_index', autospec=True)
+    def test_load_index_from_file(self, mock_read_index):
+        index_file = "sample_index.index"
+        mock_index = faiss.IndexFlatIP(384)
+        mock_read_index.return_value = mock_index
+
+        loaded_index = self.semantic_search_instance.load_index_from_file(index_file)
+        # Check if faiss.read_index was called with the correct file path
+        mock_read_index.assert_called_once_with(index_file)
+        assert isinstance(loaded_index, faiss.IndexFlatIP)
+
     def test_create_query(self):
         query = "sample query"
         query_embedding = self.semantic_search_instance.create_query(query)
@@ -62,3 +85,12 @@ class TestSemanticSearch:
         for reranked_result in reranked_results:
             assert isinstance(reranked_result, tuple)
             assert len(reranked_result) == 4
+
+    @patch("faiss.write_index", autospec=True)
+    def test_save_index_to_file(self, mock_faiss_write_index):
+        index_file = "sample_index.index"
+        mock_faiss_write_index.return_value = None
+        self.semantic_search_instance.save_index_to_file(index_file)
+
+        # Check if faiss.write_index was called with the correct arguments
+        mock_faiss_write_index.assert_called_once_with(self.semantic_search_instance.index, index_file)
