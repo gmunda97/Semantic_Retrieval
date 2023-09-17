@@ -1,10 +1,10 @@
+from dataclasses import dataclass
+from typing import List
 import pickle
 import argparse
 import os
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     if not os.path.exists(dataset_path):
         print(f"Dataset file does not exist: {dataset_path}")
         exit()
-    
+
     model = SentenceEmbeddings('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
     df = pd.read_csv(dataset_path)
     column_names = ColumnNames()
