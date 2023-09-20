@@ -2,13 +2,13 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import faiss
-from semantic_search import SemanticSearch
+from Semantic_Retrieval.scripts.semantic_search import SemanticSearch
 
 
 sample_embeddings = np.random.rand(100, 384).astype('float32')
 faiss.normalize_L2(sample_embeddings)
-sample_texts = pd.read_csv("./datasets/papers.csv")["title"][:100].tolist()
-sample_links = pd.read_csv("./datasets/papers.csv")["link"][:100].tolist()
+sample_texts = pd.read_csv(".././datasets/papers.csv")["title"][:100].tolist()
+sample_links = pd.read_csv(".././datasets/papers.csv")["link"][:100].tolist()
 
 
 class TestSemanticSearch:

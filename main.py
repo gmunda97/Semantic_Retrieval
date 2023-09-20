@@ -6,8 +6,8 @@ import argparse
 import os
 import pickle
 import pandas as pd
-from semantic_search import SemanticSearch
-from sentence_embeddings import ColumnNames
+from scripts.semantic_search import SemanticSearch
+from scripts.sentence_embeddings import ColumnNames
 
 
 if __name__ == '__main__':

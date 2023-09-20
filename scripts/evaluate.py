@@ -48,9 +48,9 @@ class SemanticSearchEvaluation:
 
 
 if __name__ == "__main__":
-    DATASET_PATH = "datasets/papers.csv"
-    EMBEDDINGS_PATH = "embeddings/embeddings_papers.pkl"
-    INDEX_PATH = "index/index_papers.index"
+    DATASET_PATH = "../datasets/papers.csv"
+    EMBEDDINGS_PATH = "../embeddings/embeddings_papers.pkl"
+    INDEX_PATH = "../index/index_papers.index"
 
     CROSS_ENCODER_NAME = 'cross-encoder/ms-marco-MiniLM-L-6-v2'
 
