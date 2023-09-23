@@ -2,7 +2,7 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import faiss
-from Semantic_Retrieval.scripts.semantic_search import SemanticSearch
+from ..scripts.semantic_search import SemanticSearch
 
 
 sample_embeddings = np.random.rand(100, 384).astype('float32')
