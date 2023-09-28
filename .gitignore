@@ -6,4 +6,6 @@
 /index
 /SQL
 /retrieval-venv
-/__pycache__
+/tests/.pytest_cache
+**/__init__.py
+**/__pycache__

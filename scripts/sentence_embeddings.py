@@ -1,9 +1,10 @@
+from dataclasses import dataclass
+from typing import List
 import pickle
 import argparse
 import os
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-from dataclasses import dataclass
 
 
 @dataclass
@@ -13,13 +14,20 @@ class ColumnNames:
 
 
 class SentenceEmbeddings():
-    def __init__(self, model_name):
+    def __init__(self, model_name: str) -> None:
         self.model = SentenceTransformer(model_name)
 
-    def generate_embeddings(self, documents):
+    def generate_embeddings(self, documents: List[str]) -> List[List[float]]:
+        '''
+        Method to generate embeddings for a list of documents.
+
+        Args: a list of documents (strings)
+        Returns: a list of embeddings (lists of floats)
+        '''
         documents = documents.to_list()
         embeddings = self.model.encode(documents)
         self.save_embeddings(embeddings)
+
         return embeddings
 
     def save_embeddings(self, embeddings, filename="embeddings_papers.pkl"):
@@ -36,7 +44,7 @@ if __name__ == '__main__':
     if not os.path.exists(dataset_path):
         print(f"Dataset file does not exist: {dataset_path}")
         exit()
-    
+
     model = SentenceEmbeddings('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
     df = pd.read_csv(dataset_path)
     column_names = ColumnNames()
