@@ -1,9 +1,9 @@
 import os
 import pickle
+from unittest.mock import mock_open, patch
 import pytest
 import pandas as pd
 import numpy as np
-from unittest.mock import mock_open, patch
 from ..scripts.sentence_embeddings import SentenceEmbeddings
 
 dataset = pd.read_csv(".././datasets/papers.csv")
@@ -30,16 +30,21 @@ class TestSentenceEmbeddings:
         # Temporary directory for testing
         return tmpdir.mkdir("test_data")
 
-    def test_save_embeddings(self, tmp_dir):
+    @patch('os.path.isfile', return_value=False)
+    @patch('builtins.open', new_callable=mock_open, create=True)
+    def test_save_embeddings(self, mock_open_file, tmp_dir):
         embeddings = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
         file_path = os.path.join(tmp_dir, "test_embeddings.pkl")
 
-        self.sentence_embeddings_instance.save_embeddings(embeddings, file_path)
+        with patch('os.path.isfile', return_value=False):
+            self.sentence_embeddings_instance.save_embeddings(embeddings, file_path)
 
-        # Check if file exists
-        assert os.path.isfile(file_path)
+        # Check if the file was opened in write binary mode ('wb')
+        mock_open_file.assert_called_once_with(file_path, 'wb')
+        # Check if the pickle.dump method was called
+        mock_open_file().write.assert_called_once()
 
-        with open(file_path, 'rb') as f:
-            loaded_embeddings = pickle.load(f)
+        _, args, _ = mock_open_file().write.mock_calls[0]
+        loaded_embeddings = pickle.loads(args[0])
 
         assert loaded_embeddings == embeddings
